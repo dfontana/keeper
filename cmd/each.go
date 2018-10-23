@@ -1,24 +1,13 @@
-// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
+
+var fetch bool
 
 // eachCmd represents the each command
 var eachCmd = &cobra.Command{
@@ -31,20 +20,30 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("each called")
+		// Determine command to run
+		isFetch, _ := cmd.Flags().GetBool("fetch")
+		if isFetch {
+			fetchDirs(cmd, args)
+		}
 	},
+}
+
+func fetchDirs(cmd *cobra.Command, args []string) {
+	executeDirs := []string{}
+	dirs := viper.GetStringMapString("dirs")
+	for k := range dirs {
+		if ok, _ := cmd.Flags().GetBool(k); ok {
+			executeDirs = append(executeDirs, k)
+		}
+	}
+
+	// TODO continue from here
+	fmt.Println(executeDirs)
 }
 
 func init() {
 	rootCmd.AddCommand(eachCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// eachCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// eachCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Prepare the commands
+	eachCmd.Flags().Bool("fetch", false, "Fetches each of the flagged dirs")
 }
