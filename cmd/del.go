@@ -1,36 +1,61 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 // delCmd represents the del command
 var delCmd = &cobra.Command{
-	Use:   "del",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "del <branch_name> <branch_name> <...>",
+	Short: "Deletes a branch both locally and remotely",
+	Long:  `Given a list of branch names (without the origin/), will delete each one both locally and remotely.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("del called")
+		if len(args) == 0 {
+			return
+		}
+
+		local := []string{
+			"git",
+			"branch",
+			"-D",
+		}
+		remote := []string{
+			"git",
+			"push",
+			"--delete",
+			"origin",
+		}
+
+		gitLocalExec := exec.Command(
+			"sh",
+			"-c",
+			strings.Join(append(local, args...), " "),
+		)
+
+		gitRemoteExec := exec.Command(
+			"sh",
+			"-c",
+			strings.Join(append(remote, args...), " "),
+		)
+
+		gitLocalExec.Stdout = os.Stdout
+		gitLocalExec.Stderr = os.Stderr
+		gitRemoteExec.Stdout = os.Stdout
+		gitRemoteExec.Stderr = os.Stderr
+		if err := gitLocalExec.Run(); err != nil {
+			return
+		}
+
+		if err := gitRemoteExec.Run(); err != nil {
+			return
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(delCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// delCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// delCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
