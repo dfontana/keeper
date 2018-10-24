@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var fetch bool
@@ -20,25 +20,36 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Get Dirs
+		dirs := BuildDirs(cmd)
+
 		// Determine command to run
 		isFetch, _ := cmd.Flags().GetBool("fetch")
 		if isFetch {
-			fetchDirs(cmd, args)
+			var wg sync.WaitGroup
+			for _, dir := range dirs {
+				wg.Add(1)
+				go fetchDir(dir, &wg)
+				wg.Wait()
+			}
+			return
 		}
 	},
 }
 
-func fetchDirs(cmd *cobra.Command, args []string) {
-	executeDirs := []string{}
-	dirs := viper.GetStringMapString("dirs")
-	for k := range dirs {
-		if ok, _ := cmd.Flags().GetBool(k); ok {
-			executeDirs = append(executeDirs, k)
-		}
-	}
+// fetchDir fetches the given git directory
+func fetchDir(dir string, wg *sync.WaitGroup) {
+	defer wg.Done()
 
-	// TODO continue from here
-	fmt.Println(executeDirs)
+	params := []string{
+		"git",
+		"fetch",
+		"origin",
+		"master",
+	}
+	if err := Run(params); err != nil {
+		fmt.Println(err)
+	}
 }
 
 func init() {

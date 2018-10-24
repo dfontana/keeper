@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"os"
-	"os/exec"
-	"strings"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -18,6 +16,17 @@ var delCmd = &cobra.Command{
 			return
 		}
 
+		// Cofirm each branch with the user, to be sure
+		confirmedList := []string{}
+		for _, branch := range args {
+			ans := Prompt(fmt.Sprintf("Delete %s", branch))
+			if ans {
+				confirmedList = append(confirmedList, branch)
+			} else {
+				fmt.Printf("Skipping %s\n", branch)
+			}
+		}
+
 		local := []string{
 			"git",
 			"branch",
@@ -30,27 +39,11 @@ var delCmd = &cobra.Command{
 			"origin",
 		}
 
-		gitLocalExec := exec.Command(
-			"sh",
-			"-c",
-			strings.Join(append(local, args...), " "),
-		)
-
-		gitRemoteExec := exec.Command(
-			"sh",
-			"-c",
-			strings.Join(append(remote, args...), " "),
-		)
-
-		gitLocalExec.Stdout = os.Stdout
-		gitLocalExec.Stderr = os.Stderr
-		gitRemoteExec.Stdout = os.Stdout
-		gitRemoteExec.Stderr = os.Stderr
-		if err := gitLocalExec.Run(); err != nil {
+		if err := Run(append(local, confirmedList...)); err != nil {
 			return
 		}
 
-		if err := gitRemoteExec.Run(); err != nil {
+		if err := Run(append(remote, confirmedList...)); err != nil {
 			return
 		}
 	},
