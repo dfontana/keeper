@@ -2,6 +2,17 @@
 
 Keeper is a CLI tool that manages your codebase. Keeper is designed to ease the burden of working on multiple, large mono-repos at once that need to stay in-sync and lean. As a result, a lot of what you'll find keeper has to offer thrives under the idea that keeper runs out of your "GitHub" folder.
 
+## Table of Contents
+
+1. [Getting Started](#getting-started)
+2. [Basic Config](#basic-config)
+3. [Commands](#commands)
+   i. [list](#list)
+   ii. [del](#del)
+   iii. [run](#run)
+   iv. [start](#start)
+4. [TODO](#todo)
+
 ## Getting started
 
 Since no binaries are currently available, the best option you have is to get the package and install it:
@@ -16,7 +27,7 @@ Note you'll want to make sure your `GOPATH` is set and `$GOPATH/bin` is in your 
 
 If you'd like to clone via SSH rather than HTTPS, a helpful setting: `git config --global url.git@github.com:.insteadOf https://github.com/`
 
-## Config
+## Basic Config
 
 To work correctly you must specify a config in your `$HOME` called `.keeper`. Inside should be, at minimum, a JSON with keys:
 
@@ -31,3 +42,52 @@ To work correctly you must specify a config in your `$HOME` called `.keeper`. In
 ```
 
 This specifies the folder (codebase) where all your dirs live. Each dir entry is a key value where the key is the name of the dir in that folder and the value is the shorthand flag you'd like to use to specify it. Thus, you can do `--example` or `-e` to operate on the`/path/to/where/dirs/live/example` folder with keeper.
+
+## Commands
+
+This section gives a brief overview of what each command does. For details on how to utilize and run, see `--help`.
+
+### list
+
+Displays branches with their author. By providing a search string, you can filter the output to only those containing the filter. By default, if no filter is provided the `git config user.name` is utilized as the filter instead. Omitting directory flags will run the command in the current directory. Running with multiple directory flags will run the command in each, printing the directory of the branch in addition to the author and name.
+
+`-i` will make the search insensitive.
+
+### del
+
+Deletes the given list of branches, from both the local and remote. `<remote>/` need not be prepended to the branch name. If a directory flag is omitted, the current directory is used. Providing multiple directory flags will invalidate the command. Before deletion, you will be prompted to confirm each directory to be deleted, _after which the deletion will occur_ allowing the user time to cancel if they made a mistake.
+
+### run
+
+Runs the given command against each directory, returning once all commands have finished. Must provide at least one directory flag.
+
+### start
+
+An each east way to start a new feature by creating a branch off `origin/master` in each of the provided directory flags. The command will attempt to checkout into these branches, but is not guaranteed to succeed if any directory contains uncommitted changes. If your `.keeper` config contains a template string for the start command, then the provided name will be substituted into the template for each instance of `${NAME}` before naming each branch.
+
+```
+{
+  ...,
+  "start": "feature_${NAME}"
+  ...
+}
+```
+
+## TODO
+
+- List
+  - [ ] Add single directory flag functionality
+  - [ ] Add support for multiple directory flags
+  - [ ] Can we get colorized `grep` output printing again? :(
+- Del
+  - [ ] Providing no arguments should print `help`
+  - [ ] Add single directory flag functionality
+  - [ ] Add a `--force` to override the confirmation prompt (maybe? This command can be dangerous...)
+- Each
+  - [ ] Rename to run
+  - [ ] Implement
+- Start
+  - [ ] Implement for current directory
+  - [ ] Implement for given directory flags
+  - [ ] Add config templating
+  - [ ] Directory specific templates?
