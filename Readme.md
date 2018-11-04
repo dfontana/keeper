@@ -23,9 +23,10 @@ Since no binaries are currently available, the best option you have is to get th
 
 Note you'll want to make sure your `GOPATH` is set and `$GOPATH/bin` is in your `PATH`.
 
-#### Side note:
+#### Helpful (?) Hints:
 
-If you'd like to clone via SSH rather than HTTPS, a helpful setting: `git config --global url.git@github.com:.insteadOf https://github.com/`
+- If prefer SSH to HTTPS, make sure this is set: `git config --global url.git@github.com:.insteadOf https://github.com/`
+- If you don't have `go` installed, `brew install go` does the trick :)
 
 ## Basic Config
 
