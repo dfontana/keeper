@@ -4,14 +4,14 @@ Keeper is a CLI tool that manages your codebase. Keeper is designed to ease the 
 
 ## Table of Contents
 
-1. [Getting Started](#getting-started)
-2. [Basic Config](#basic-config)
-3. [Commands](#commands)
-   i. [list](#list)
-   ii. [del](#del)
-   iii. [run](#run)
-   iv. [start](#start)
-4. [TODO](#todo)
+- [Getting Started](#getting-started)
+- [Basic Config](#basic-config)
+- [Commands](#commands)
+  - [list](#list)
+  - [del](#del)
+  - [run](#run)
+  - [start](#start)
+- [TODO](#todo)
 
 ## Getting started
 
