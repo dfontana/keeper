@@ -1,6 +1,6 @@
 package main
 
-import "keeper/cmd"
+import "github.com/dfontana/keeper/cmd"
 
 func main() {
 	cmd.Execute()
