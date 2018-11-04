@@ -73,22 +73,3 @@ An each east way to start a new feature by creating a branch off `origin/master`
   ...
 }
 ```
-
-## TODO
-
-- List
-  - [ ] Add single directory flag functionality
-  - [ ] Add support for multiple directory flags
-  - [ ] Can we get colorized `grep` output printing again? :(
-- Del
-  - [ ] Providing no arguments should print `help`
-  - [ ] Add single directory flag functionality
-  - [ ] Add a `--force` to override the confirmation prompt (maybe? This command can be dangerous...)
-- Each
-  - [ ] Rename to run
-  - [ ] Implement
-- Start
-  - [ ] Implement for current directory
-  - [ ] Implement for given directory flags
-  - [ ] Add config templating
-  - [ ] Directory specific templates?
