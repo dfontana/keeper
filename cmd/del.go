@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -16,34 +17,38 @@ var delCmd = &cobra.Command{
 			return
 		}
 
+		// Commands to validate if branches exist locally and remote
+		testLocal := "git show-ref --verify --quiet refs/heads/"
+		testRemote := "git ls-remote --heads --exit-code origin"
+
+		// Commands to delete branches in local and remote
+		local := "git branch -D"
+		remote := "git push --delete origin"
+
 		// Cofirm each branch with the user, to be sure
-		confirmedList := []string{}
+		// We'll only consider items that exist in either location irrespective
+		// to the other
+		localList := []string{}
+		remoteList := []string{}
 		for _, branch := range args {
 			ans := PromptBool(fmt.Sprintf("Delete %s", branch))
 			if ans {
-				confirmedList = append(confirmedList, branch)
+				if err := RunString(testLocal + branch); err == nil {
+					localList = append(localList, branch)
+				}
+				if err := RunString(testRemote + branch); err == nil {
+					remoteList = append(remoteList, branch)
+				}
 			} else {
 				fmt.Printf("Skipping %s\n", branch)
 			}
 		}
 
-		local := []string{
-			"git",
-			"branch",
-			"-D",
-		}
-		remote := []string{
-			"git",
-			"push",
-			"--delete",
-			"origin",
-		}
-
-		if err := Run(append(local, confirmedList...)); err != nil {
+		if err := RunString(local + strings.Join(localList, " ")); err != nil {
 			return
 		}
 
-		if err := Run(append(remote, confirmedList...)); err != nil {
+		if err := RunString(remote + strings.Join(remoteList, " ")); err != nil {
 			return
 		}
 	},

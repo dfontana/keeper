@@ -21,6 +21,14 @@ func Run(params []string) (err error) {
 	return
 }
 
+func RunString(command string) (err error) {
+	cmd := exec.Command("sh", "-c", command)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	return
+}
+
 // Output returns the result of a command from the command line
 func Output(params []string) (out string, err error) {
 	cmd := exec.Command("sh", "-c", strings.Join(params, " "))
