@@ -7,6 +7,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func mapAry(vs []string, f func(string) string) []string {
+	vsm := make([]string, len(vs))
+	for i, v := range vs {
+		vsm[i] = f(v)
+	}
+	return vsm
+}
+
 // delCmd represents the del command
 var delCmd = &cobra.Command{
 	Use:   "del <branch_name> <branch_name> <...>",
@@ -19,11 +27,11 @@ var delCmd = &cobra.Command{
 
 		// Commands to validate if branches exist locally and remote
 		testLocal := "git show-ref --verify --quiet refs/heads/"
-		testRemote := "git ls-remote --heads --exit-code origin"
+		testRemote := "git ls-remote --heads --exit-code origin "
 
 		// Commands to delete branches in local and remote
-		local := "git branch -D"
-		remote := "git push --delete origin"
+		local := "git branch -D "
+		remote := "git push --delete origin "
 
 		// Cofirm each branch with the user, to be sure
 		// We'll only consider items that exist in either location irrespective
@@ -43,13 +51,24 @@ var delCmd = &cobra.Command{
 				fmt.Printf("Skipping %s\n", branch)
 			}
 		}
+		fmt.Println("Deleting:")
+		fmt.Println(strings.Join(mapAry(localList, func(v string) string {
+			return "\t[Local]: " + v
+		}), " "))
+		fmt.Println(strings.Join(mapAry(remoteList, func(v string) string {
+			return "\t[Remote]: " + v
+		}), " "))
 
-		if err := RunString(local + strings.Join(localList, " ")); err != nil {
-			return
+		if len(localList) > 0 {
+			if err := RunString(local + strings.Join(localList, " ")); err != nil {
+				return
+			}
 		}
 
-		if err := RunString(remote + strings.Join(remoteList, " ")); err != nil {
-			return
+		if len(remoteList) > 0 {
+			if err := RunString(remote + strings.Join(remoteList, " ")); err != nil {
+				return
+			}
 		}
 	},
 }
