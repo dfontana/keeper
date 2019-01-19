@@ -22,6 +22,7 @@ var delCmd = &cobra.Command{
 	Long:  `Given a list of branch names (without the origin/), will delete each one both locally and remotely.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
+			cmd.Help()
 			return
 		}
 
