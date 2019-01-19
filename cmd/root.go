@@ -46,6 +46,7 @@ func initConfig() {
 	viper.SetConfigFile(home + "/.keeper")
 	err = viper.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s", err))
+		fmt.Println("You're missing the ~/.keeper config! Please add it to continue")
+		os.Exit(1)
 	}
 }
