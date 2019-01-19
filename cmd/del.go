@@ -19,7 +19,7 @@ var delCmd = &cobra.Command{
 		// Cofirm each branch with the user, to be sure
 		confirmedList := []string{}
 		for _, branch := range args {
-			ans := Prompt(fmt.Sprintf("Delete %s", branch))
+			ans := PromptBool(fmt.Sprintf("Delete %s", branch))
 			if ans {
 				confirmedList = append(confirmedList, branch)
 			} else {

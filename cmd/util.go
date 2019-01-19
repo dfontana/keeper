@@ -55,8 +55,19 @@ func BuildDirs(cmd *cobra.Command) (executeDirs []string) {
 	return
 }
 
-// Prompt the user a yes no answer
-func Prompt(prompt string) (ans bool) {
+// PromptString will ask for a string response from the user, trimmed
+func PromptString(prompt string) (ans string) {
+	fmt.Printf("%s ", prompt)
+	_, err := fmt.Scanln(&ans)
+	if err != nil {
+		panic(err)
+	}
+	ans = strings.TrimSpace(ans)
+	return
+}
+
+// PromptBool the user a yes no answer
+func PromptBool(prompt string) (ans bool) {
 	fmt.Printf("%s? [y/n]: ", prompt)
 	var s string
 	_, err := fmt.Scan(&s)

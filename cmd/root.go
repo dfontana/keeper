@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -43,10 +44,9 @@ func initConfig() {
 		os.Exit(1)
 	}
 	viper.SetConfigType("json")
-	viper.SetConfigFile(home + "/.keeper")
+	viper.SetConfigFile(filepath.Join(home, ".keeper"))
 	err = viper.ReadInConfig()
 	if err != nil {
-		fmt.Println("You're missing the ~/.keeper config! Please add it to continue")
-		os.Exit(1)
+		fmt.Println("You're missing the ~/.keeper config! Use `keeper generate` to make one")
 	}
 }
