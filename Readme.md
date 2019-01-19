@@ -11,7 +11,7 @@ Keeper is a CLI tool that manages your codebase. Keeper is designed to ease the 
   - [del](#del)
   - [run](#run)
   - [start](#start)
-- [TODO](#todo)
+- [TODO](https://github.com/dfontana/keeper/issues/1)
 
 ## Getting started
 
