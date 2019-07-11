@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 func mapAry(vs []string, f func(string) string) []string {
@@ -25,6 +28,16 @@ var delCmd = &cobra.Command{
 			cmd.Help()
 			return
 		}
+
+		dir, err := os.Getwd()
+		if err != nil {
+			log.Fatal("Could not open current directory")
+		}
+		repo, err := git.PlainOpen(dir)
+		if err != nil {
+			log.Fatal("Could not find repository in current directory")
+		}
+		repo.Branches()
 
 		// Commands to validate if branches exist locally and remote
 		testLocal := "git show-ref --verify --quiet refs/heads/"
