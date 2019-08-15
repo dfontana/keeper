@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get Dirs
-		dirs := BuildDirs(cmd)
+		dirs := util.BuildDirs(cmd)
 
 		// Determine command to run
 		isFetch, _ := cmd.Flags().GetBool("fetch")
@@ -47,14 +48,13 @@ func fetchDir(dir string, wg *sync.WaitGroup) {
 		"origin",
 		"master",
 	}
-	if err := Run(params); err != nil {
+	if err := util.Run(params); err != nil {
 		fmt.Println(err)
 	}
 }
 
-func init() {
-	rootCmd.AddCommand(eachCmd)
-
+func newEachCmd() *cobra.Command {
 	// Prepare the commands
 	eachCmd.Flags().Bool("fetch", false, "Fetches each of the flagged dirs")
+	return eachCmd
 }

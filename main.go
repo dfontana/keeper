@@ -1,7 +1,7 @@
 package main
 
-import "github.com/dfontana/keeper/cmd"
+import "github.com/dfontana/keeper/app"
 
 func main() {
-	cmd.Execute()
+	app.Start()
 }
