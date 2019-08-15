@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +23,7 @@ var listCmd = &cobra.Command{
 				"config",
 				"user.name",
 			}
-			out, err := Output(params)
+			out, err := util.Output(params)
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -47,12 +48,11 @@ var listCmd = &cobra.Command{
 			params = append(params, "-i")
 		}
 
-		Run(params)
+		util.Run(params)
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(listCmd)
+func newListCmd() *cobra.Command {
 	listCmd.Flags().BoolVarP(
 		&insensitive,
 		"insensitive",
@@ -60,4 +60,6 @@ func init() {
 		false,
 		"Help message for toggle",
 	)
+
+	return listCmd
 }

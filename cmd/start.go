@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
 )
 
@@ -24,10 +25,10 @@ var startCmd = &cobra.Command{
 			fmt.Sprintf("%s_pt_%s", args[0], args[1]),
 		}
 
-		Run(params)
+		util.Run(params)
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(startCmd)
+func newStartCmd() *cobra.Command {
+	return startCmd
 }

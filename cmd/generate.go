@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dfontana/keeper/util"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +32,7 @@ var generateCmd = &cobra.Command{
 		exists := false
 		fmt.Println("First provide the root directory of your codebase, where all sub-repos are")
 		for !exists {
-			ans := strings.Trim(PromptString("Codebase Path:"), " ")
+			ans := strings.Trim(util.PromptString("Codebase Path:"), " ")
 			ans, _ = homedir.Expand(ans)
 			_, err := os.Stat(ans)
 			if err == nil {
@@ -51,7 +52,7 @@ var generateCmd = &cobra.Command{
 			if err == nil && strings.Trim(directory, " ") != "" && strings.Trim(flag, " ") != "" {
 				config.Dir[directory] = flag
 				exists = true
-				done = !PromptBool("Add Another")
+				done = !util.PromptBool("Add Another")
 			}
 		}
 
@@ -80,6 +81,6 @@ var generateCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(generateCmd)
+func newGenerateCmd() *cobra.Command {
+	return generateCmd
 }

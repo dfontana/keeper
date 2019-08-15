@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +16,7 @@ func mapAry(vs []string, f func(string) string) []string {
 	return vsm
 }
 
-// delCmd represents the del command
+// DelCmd represents the del command
 var delCmd = &cobra.Command{
 	Use:   "del <branch_name> <branch_name> <...>",
 	Short: "Deletes a branch both locally and remotely",
@@ -40,12 +41,12 @@ var delCmd = &cobra.Command{
 		localList := []string{}
 		remoteList := []string{}
 		for _, branch := range args {
-			ans := PromptBool(fmt.Sprintf("Delete %s", branch))
+			ans := util.PromptBool(fmt.Sprintf("Delete %s", branch))
 			if ans {
-				if err := RunString(testLocal + branch); err == nil {
+				if err := util.RunString(testLocal + branch); err == nil {
 					localList = append(localList, branch)
 				}
-				if err := RunString(testRemote + branch); err == nil {
+				if err := util.RunString(testRemote + branch); err == nil {
 					remoteList = append(remoteList, branch)
 				}
 			} else {
@@ -61,19 +62,19 @@ var delCmd = &cobra.Command{
 		}), " "))
 
 		if len(localList) > 0 {
-			if err := RunString(local + strings.Join(localList, " ")); err != nil {
+			if err := util.RunString(local + strings.Join(localList, " ")); err != nil {
 				return
 			}
 		}
 
 		if len(remoteList) > 0 {
-			if err := RunString(remote + strings.Join(remoteList, " ")); err != nil {
+			if err := util.RunString(remote + strings.Join(remoteList, " ")); err != nil {
 				return
 			}
 		}
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(delCmd)
+func newDelCmd() *cobra.Command {
+	return delCmd
 }
