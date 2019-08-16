@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
+	"github.com/spf13/viper"
 
 	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
@@ -9,20 +13,47 @@ import (
 
 // startCmd represents the start command
 var startCmd = &cobra.Command{
-	Use:   "start <description> <number>",
-	Short: "Begins a new brach with the given ticket number",
-	Long: `Given the name and number will checkout a new branch from master with the given
-	pt number in the properly named format`,
+	Use:   "start",
+	Short: "Begin a new branch",
+	Long: `Using the template in your config file, beings a new branch
+	after prompting for template values`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 2 {
-			return
+		valid := false
+		prompts := viper.GetStringSlice("prompts")
+		values := []string{}
+		for _, prompt := range prompts {
+			for !valid {
+				value := util.PromptString(fmt.Sprintf("%s:", prompt))
+				if util.ValidateStringSpaces(value) {
+					valid = true
+					values = append(values, value)
+				} else {
+					fmt.Println("Value may not have spaces or be empty")
+				}
+			}
+			valid = false
+		}
+
+		template := viper.GetString("template")
+		if template == "" {
+			fmt.Println("No template found in ~/.keeper")
+			os.Exit(1)
+		}
+		for _, value := range values {
+			template = strings.Replace(template, "#s#", value, 1)
+		}
+
+		ack := util.PromptBool(fmt.Sprintf("Checkout to %s?", template))
+		if !ack {
+			fmt.Println("Cancelled.")
+			os.Exit(0)
 		}
 
 		params := []string{
 			"git",
 			"checkout",
 			"-b",
-			fmt.Sprintf("%s_pt_%s", args[0], args[1]),
+			template,
 		}
 
 		util.Run(params)
