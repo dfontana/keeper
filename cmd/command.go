@@ -4,10 +4,9 @@ import "github.com/spf13/cobra"
 
 // Init all the commands; consider this the entry point
 func Init(root *cobra.Command) {
-	commands := [5]*cobra.Command{
+	commands := []*cobra.Command{
 		newStartCmd(),
 		newDelCmd(),
-		newEachCmd(),
 		newGenerateCmd(),
 		newListCmd(),
 	}
