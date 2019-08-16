@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
 
 	"github.com/dfontana/keeper/util"
 	homedir "github.com/mitchellh/go-homedir"
@@ -14,8 +14,9 @@ import (
 )
 
 type config struct {
-	Codebase string            `json:"codebase"`
-	Dir      map[string]string `json:"dirs"`
+	Namespace string   `json:"namespace"`
+	Template  string   `json:"template"`
+	Prompts   []string `json:"prompts"`
 }
 
 // generateCmd represents the generate config command
@@ -25,34 +26,48 @@ var generateCmd = &cobra.Command{
 	Long:  `Creates the ~/.keeper config file the program uses to operate. Will replace existing one if present.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var config = config{
-			Codebase: "",
-			Dir:      map[string]string{},
+			Namespace: "",
+			Template:  "",
+			Prompts:   []string{},
 		}
 
-		exists := false
-		fmt.Println("First provide the root directory of your codebase, where all sub-repos are")
-		for !exists {
-			ans := strings.Trim(util.PromptString("Codebase Path:"), " ")
-			ans, _ = homedir.Expand(ans)
-			_, err := os.Stat(ans)
-			if err == nil {
-				config.Codebase = ans
-				exists = true
+		valid := false
+		fmt.Println("What's your K8s Namespace?")
+		for !valid {
+			config.Namespace = util.PromptString("Namespace: ")
+			if util.ValidateStringSpaces(config.Namespace) {
+				valid = true
+			} else {
+				fmt.Println("Value cannot be empty or contain spaces")
 			}
 		}
 
-		done := false
-		exists = false
-		fmt.Println("Now add directories and shorthand flag in codebase, ex: javascript j")
-		for !done || !exists {
-			var directory, flag string
-			fmt.Printf("Entry: ")
-			fmt.Scanf("%s %s", &directory, &flag)
-			_, err := os.Stat(filepath.Join(config.Codebase, directory))
-			if err == nil && strings.Trim(directory, " ") != "" && strings.Trim(flag, " ") != "" {
-				config.Dir[directory] = flag
-				exists = true
-				done = !util.PromptBool("Add Another")
+		valid = false
+		fmt.Println("Provide the template for new branches. Specify #s# where you want to prompt for input. You'll then specify these prompts afterwards.")
+		for !valid {
+			config.Template = util.PromptString("Template: ")
+			if util.ValidateStringSpaces(config.Template) {
+				valid = true
+			} else {
+				fmt.Println("Value cannot be empty or contain spaces")
+			}
+		}
+
+		pcntS := regexp.MustCompile("#s#")
+		numPrompts := len(pcntS.FindAllStringIndex(config.Template, -1))
+
+		valid = false || numPrompts == 0
+		if !valid {
+			fmt.Println("Provide your prompts for each placeholder: ")
+		}
+		for !valid || numPrompts != 0 {
+			nextPrompt := util.PromptString("Prompt: ")
+			if nextPrompt != "" {
+				valid = true
+				numPrompts--
+				config.Prompts = append(config.Prompts, nextPrompt)
+			} else {
+				fmt.Println("Value cannot be empty")
 			}
 		}
 
@@ -77,6 +92,7 @@ var generateCmd = &cobra.Command{
 			return
 		}
 
+		fmt.Println("Config written.")
 		return
 	},
 }

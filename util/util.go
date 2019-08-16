@@ -1,11 +1,13 @@
 package util
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -65,14 +67,15 @@ func BuildDirs(cmd *cobra.Command) (executeDirs []string) {
 }
 
 // PromptString will ask for a string response from the user, trimmed
-func PromptString(prompt string) (ans string) {
+func PromptString(prompt string) string {
 	fmt.Printf("%s ", prompt)
-	_, err := fmt.Scanln(&ans)
-	if err != nil {
-		panic(err)
+	scanner := bufio.NewScanner(os.Stdin)
+	if !scanner.Scan() {
+		fmt.Println("Failed to scan input")
+		os.Exit(1)
 	}
-	ans = strings.TrimSpace(ans)
-	return
+
+	return strings.TrimSpace(scanner.Text())
 }
 
 // PromptBool the user a yes no answer
@@ -87,4 +90,11 @@ func PromptBool(prompt string) (ans bool) {
 	s = strings.ToLower(s)
 	ans = s[0] == 'y'
 	return
+}
+
+// ValidateStringSpaces to not contain spaces or is empty
+func ValidateStringSpaces(value string) bool {
+	space := regexp.MustCompile(" ")
+	numSpaces := len(space.FindAllStringIndex(value, -1))
+	return numSpaces == 0 || value == ""
 }
