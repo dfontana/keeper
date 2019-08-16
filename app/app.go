@@ -30,15 +30,13 @@ func Start() {
 }
 
 func init() {
-	initConfig()
-
-	dirs := viper.GetStringMapString("dirs")
-	for dir, abv := range dirs {
-		rootCmd.PersistentFlags().BoolP(dir, abv, false, "Directory in codebase dir")
+	err := initConfig()
+	if err != nil {
+		fmt.Println("You're missing the ~/.keeper config! Use `keeper generate` to make one")
 	}
 }
 
-func initConfig() {
+func initConfig() (err error) {
 	// Find home directory.
 	home, err := homedir.Dir()
 	if err != nil {
@@ -48,7 +46,5 @@ func initConfig() {
 	viper.SetConfigType("json")
 	viper.SetConfigFile(filepath.Join(home, ".keeper"))
 	err = viper.ReadInConfig()
-	if err != nil {
-		fmt.Println("You're missing the ~/.keeper config! Use `keeper generate` to make one")
-	}
+	return
 }
