@@ -38,3 +38,41 @@ func StringHelp(prompt string, help string) (val string) {
 	val = strings.TrimSpace(val)
 	return
 }
+
+// Select an item from a list
+func Select(prompt string, options []string) string {
+	return SelectHelp(prompt, "", options)
+}
+
+// SelectHelp select, with a help message
+func SelectHelp(prompt string, help string, options []string) (val string) {
+	val = ""
+	question := &survey.Select{
+		Message: prompt,
+		Options: options,
+	}
+	if help != "" {
+		question.Help = help
+	}
+	survey.AskOne(question, &val)
+	return
+}
+
+// SelectMany options from a list
+func SelectMany(prompt string, options []string) []string {
+	return SelectManyHelp(prompt, "", options)
+}
+
+// SelectManyHelp select many, but with a help prompt
+func SelectManyHelp(prompt string, help string, options []string) (val []string) {
+	val = []string{}
+	question := &survey.MultiSelect{
+		Message: prompt,
+		Options: options,
+	}
+	if help != "" {
+		question.Help = help
+	}
+	survey.AskOne(question, &val)
+	return
+}
