@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dfontana/keeper/prompt"
 	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
 )
@@ -41,7 +42,7 @@ var delCmd = &cobra.Command{
 		localList := []string{}
 		remoteList := []string{}
 		for _, branch := range args {
-			ans := util.PromptBool(fmt.Sprintf("Delete %s", branch))
+			ans := prompt.Bool(fmt.Sprintf("Delete %s", branch))
 			if ans {
 				if err := util.RunString(testLocal + branch); err == nil {
 					localList = append(localList, branch)

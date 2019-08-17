@@ -1,12 +1,10 @@
 package util
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
-	"strings"
 
 	"github.com/spf13/viper"
 	"gopkg.in/src-d/go-git.v4"
@@ -18,32 +16,6 @@ func RunString(command string) (err error) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
-	return
-}
-
-// PromptString will ask for a string response from the user, trimmed
-func PromptString(prompt string) string {
-	fmt.Printf("%s ", prompt)
-	scanner := bufio.NewScanner(os.Stdin)
-	if !scanner.Scan() {
-		fmt.Println("Failed to scan input")
-		os.Exit(1)
-	}
-
-	return strings.TrimSpace(scanner.Text())
-}
-
-// PromptBool the user a yes no answer
-func PromptBool(prompt string) (ans bool) {
-	fmt.Printf("%s? [y/n]: ", prompt)
-	var s string
-	_, err := fmt.Scan(&s)
-	if err != nil {
-		panic(err)
-	}
-	s = strings.TrimSpace(s)
-	s = strings.ToLower(s)
-	ans = s[0] == 'y'
 	return
 }
 
