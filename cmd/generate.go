@@ -14,9 +14,10 @@ import (
 )
 
 type config struct {
-	Namespace string   `json:"namespace"`
-	Template  string   `json:"template"`
-	Prompts   []string `json:"prompts"`
+	Namespace  string   `json:"namespace"`
+	ListFilter string   `json:"listfilter`
+	Template   string   `json:"template"`
+	Prompts    []string `json:"prompts"`
 }
 
 // generateCmd represents the generate config command
@@ -39,6 +40,17 @@ var generateCmd = &cobra.Command{
 				valid = true
 			} else {
 				fmt.Println("Value cannot be empty or contain spaces")
+			}
+		}
+
+		valid = false
+		fmt.Println("Supply the default filter for list")
+		for !valid {
+			config.ListFilter = util.PromptString("Filter: ")
+			if config.ListFilter != "" {
+				valid = true
+			} else {
+				fmt.Println("Value cannot be empty")
 			}
 		}
 
