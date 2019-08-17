@@ -84,25 +84,16 @@ var generateCmd = &cobra.Command{
 		}
 
 		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		util.CheckSafeExit("Can't find homedir", err)
 
 		jsonFile, err := os.Create(filepath.Join(home, ".keeper"))
-		if err != nil {
-			fmt.Println("Error creating Config file:", err)
-			return
-		}
+		util.CheckSafeExit("Error creating Config file:", err)
 		defer jsonFile.Close()
 
 		jsonWriter := io.Writer(jsonFile)
 		encoder := json.NewEncoder(jsonWriter)
 		err = encoder.Encode(&config)
-		if err != nil {
-			fmt.Println("Error encoding Config to file:", err)
-			return
-		}
+		util.CheckSafeExit("Error encoding Config to file:", err)
 
 		fmt.Println("Config written.")
 		return
