@@ -28,7 +28,7 @@ var startCmd = &cobra.Command{
 		values := []string{}
 		for _, userPrompt := range prompts {
 			for !valid {
-				value := prompt.String(fmt.Sprintf("%s:", userPrompt))
+				value := prompt.String(userPrompt)
 				if util.ValidateStringSpaces(value) {
 					valid = true
 					values = append(values, value)

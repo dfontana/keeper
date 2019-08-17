@@ -1,34 +1,40 @@
 package prompt
 
 import (
-	"bufio"
-	"fmt"
-	"os"
 	"strings"
+
+	"github.com/AlecAivazis/survey/v2"
 )
 
 // Bool from the user for a yes no answer
-func Bool(prompt string) (ans bool) {
-	fmt.Printf("%s? [y/n]: ", prompt)
-	var s string
-	_, err := fmt.Scan(&s)
-	if err != nil {
-		panic(err)
+func Bool(prompt string) bool {
+	return BoolHelp(prompt, "")
+}
+
+// BoolHelp includes a help message
+func BoolHelp(prompt string, help string) (val bool) {
+	val = false
+	question := &survey.Confirm{Message: prompt}
+	if help != "" {
+		question.Help = help
 	}
-	s = strings.TrimSpace(s)
-	s = strings.ToLower(s)
-	ans = s[0] == 'y'
+	survey.AskOne(question, &val)
 	return
 }
 
 // String will ask for a string response from the user, trimmed
 func String(prompt string) string {
-	fmt.Printf("%s ", prompt)
-	scanner := bufio.NewScanner(os.Stdin)
-	if !scanner.Scan() {
-		fmt.Println("Failed to scan input")
-		os.Exit(1)
-	}
+	return StringHelp(prompt, "")
+}
 
-	return strings.TrimSpace(scanner.Text())
+// StringHelp includes a help message
+func StringHelp(prompt string, help string) (val string) {
+	val = ""
+	question := &survey.Input{Message: prompt}
+	if help != "" {
+		question.Help = help
+	}
+	survey.AskOne(question, &val)
+	val = strings.TrimSpace(val)
+	return
 }

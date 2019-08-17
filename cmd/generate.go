@@ -34,9 +34,8 @@ var generateCmd = &cobra.Command{
 		}
 
 		valid := false
-		fmt.Println("What's your K8s Namespace?")
 		for !valid {
-			config.Namespace = prompt.String("Namespace: ")
+			config.Namespace = prompt.String("What's your K8s Namespace")
 			if util.ValidateStringSpaces(config.Namespace) {
 				valid = true
 			} else {
@@ -45,9 +44,11 @@ var generateCmd = &cobra.Command{
 		}
 
 		valid = false
-		fmt.Println("Supply the default filter for list")
 		for !valid {
-			config.ListFilter = prompt.String("Filter: ")
+			config.ListFilter = prompt.StringHelp(
+				"Supply the default filter for list",
+				"This will filter over commiter emails",
+			)
 			if config.ListFilter != "" {
 				valid = true
 			} else {
@@ -56,9 +57,11 @@ var generateCmd = &cobra.Command{
 		}
 
 		valid = false
-		fmt.Println("Provide the template for new branches. Specify #s# where you want to prompt for input. You'll then specify these prompts afterwards.")
 		for !valid {
-			config.Template = prompt.String("Template: ")
+			config.Template = prompt.StringHelp(
+				"Provide the template for new branches",
+				"Specify #s# where you want to prompt for input. You'll then specify these prompts afterwards.",
+			)
 			if util.ValidateStringSpaces(config.Template) {
 				valid = true
 			} else {
@@ -74,7 +77,7 @@ var generateCmd = &cobra.Command{
 			fmt.Println("Provide your prompts for each placeholder: ")
 		}
 		for !valid || numPrompts != 0 {
-			nextPrompt := prompt.String("Prompt: ")
+			nextPrompt := prompt.String("Prompt:")
 			if nextPrompt != "" {
 				valid = true
 				numPrompts--

@@ -2,10 +2,8 @@ package prompt
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/gdamore/tcell"
-	"github.com/gdamore/tcell/encoding"
+	"github.com/AlecAivazis/survey/v2"
 )
 
 // Option has a value it represents and whether that item is chosen.
@@ -18,22 +16,40 @@ type Option struct {
 // Using space will select
 func Select(options []Option) []Option {
 
-	// init screen
-	encoding.Register()
-	s, err := tcell.NewScreen()
+	// the questions to ask
+	var qs = []*survey.Question{
+		{
+			Name:      "name",
+			Prompt:    &survey.Input{Message: "What is your name?"},
+			Validate:  survey.Required,
+			Transform: survey.Title,
+		},
+		{
+			Name: "color",
+			Prompt: &survey.Select{
+				Message: "Choose a color:",
+				Options: []string{"red", "blue", "green"},
+				Default: "red",
+			},
+		},
+		{
+			Name:   "age",
+			Prompt: &survey.Input{Message: "How old are you?"},
+		},
+	}
+
+	answers := struct {
+		Name          string // survey will match the question and field names
+		FavoriteColor string `survey:"color"` // or you can tag fields to match a specific name
+		Age           int    // if the types don't match, survey will convert it
+	}{}
+
+	// perform the questions
+	err := survey.Ask(qs, &answers)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		fmt.Println(err.Error())
+		return nil
 	}
-	if err := s.Init(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-	s.EnableMouse()
 
-	// Defer close
-	defer s.Fini()
-
-	// width, height := s.Size()
 	return nil
 }

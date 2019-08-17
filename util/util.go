@@ -24,7 +24,7 @@ func RunString(command string) (err error) {
 func ValidateStringSpaces(value string) bool {
 	space := regexp.MustCompile(" ")
 	numSpaces := len(space.FindAllStringIndex(value, -1))
-	return numSpaces == 0 || value == ""
+	return numSpaces == 0 && value != ""
 }
 
 // OpenRepoOrExit in the current working directory, or exit

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/dfontana/keeper/prompt"
 	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
 	"gopkg.in/src-d/go-git.v4"
@@ -18,6 +19,9 @@ var listCmd = &cobra.Command{
 	Short: "List branches based on the search string",
 	Long:  `Can search over the author name or branch name. If no search string is given, then this will default to the value returned from "git config user.name"`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		prompt.Select([]prompt.Option{prompt.Option{Selected: false, Value: "meow"}})
+
 		filter := util.GetConfigOrExit("listfilter")
 		filterReg := regexp.MustCompile(filter)
 		r := util.OpenRepoOrExit()
