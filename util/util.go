@@ -5,23 +5,12 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"os/user"
-	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/src-d/go-git.v4"
 )
-
-// Run will execute a command with its output to the command line
-func Run(params []string) (err error) {
-	cmd := exec.Command("sh", "-c", strings.Join(params, " "))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	return
-}
 
 // RunString executes the given string command
 func RunString(command string) (err error) {
@@ -29,40 +18,6 @@ func RunString(command string) (err error) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
-	return
-}
-
-// Output returns the result of a command from the command line
-func Output(params []string) (out string, err error) {
-	cmd := exec.Command("sh", "-c", strings.Join(params, " "))
-	res, err := cmd.Output()
-	out = string(res)
-	return
-}
-
-// BuildDirs inspects the given cmd and builds a list of absolute path working dirs
-func BuildDirs(cmd *cobra.Command) (executeDirs []string) {
-	// Get root, expanded if needed
-	root := viper.GetString("codebase")
-	if root[0] == '~' {
-		root = root[1:]
-	}
-	usr, err := user.Current()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	// Build dirs to run
-	dirs := viper.GetStringMapString("dirs")
-	for k := range dirs {
-		if ok, _ := cmd.Flags().GetBool(k); ok {
-			executeDirs = append(
-				executeDirs,
-				filepath.Join(usr.HomeDir, root, k),
-			)
-		}
-	}
 	return
 }
 
@@ -97,4 +52,29 @@ func ValidateStringSpaces(value string) bool {
 	space := regexp.MustCompile(" ")
 	numSpaces := len(space.FindAllStringIndex(value, -1))
 	return numSpaces == 0 || value == ""
+}
+
+// OpenRepoOrExit in the current working directory, or exit
+func OpenRepoOrExit() *Repository {
+	path, err := os.Getwd()
+	CheckSafeExit("Failed to get working directory", err)
+
+	r, err := git.PlainOpen(path)
+	CheckSafeExit("Failed to open repository", err)
+	return r
+}
+
+// CheckSafeExit if the error exists with message
+func CheckSafeExit(message string, err error) {
+	if err != nil {
+		fmt.Println(message, err)
+		os.Exit(0)
+	}
+}
+
+// GetConfigOrExit from keeper config or exit program
+func GetConfigOrExit(key string) string {
+	val := viper.GetString(key)
+	CheckSafeExit(fmt.Sprintf("No %s found in ~/.keeper", key))
+	return val
 }

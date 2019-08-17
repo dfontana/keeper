@@ -14,9 +14,10 @@ import (
 )
 
 type config struct {
-	Namespace string   `json:"namespace"`
-	Template  string   `json:"template"`
-	Prompts   []string `json:"prompts"`
+	Namespace  string   `json:"namespace"`
+	ListFilter string   `json:"listfilter`
+	Template   string   `json:"template"`
+	Prompts    []string `json:"prompts"`
 }
 
 // generateCmd represents the generate config command
@@ -39,6 +40,17 @@ var generateCmd = &cobra.Command{
 				valid = true
 			} else {
 				fmt.Println("Value cannot be empty or contain spaces")
+			}
+		}
+
+		valid = false
+		fmt.Println("Supply the default filter for list")
+		for !valid {
+			config.ListFilter = util.PromptString("Filter: ")
+			if config.ListFilter != "" {
+				valid = true
+			} else {
+				fmt.Println("Value cannot be empty")
 			}
 		}
 
@@ -72,25 +84,16 @@ var generateCmd = &cobra.Command{
 		}
 
 		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		util.CheckSafeExit("Can't find homedir", err)
 
 		jsonFile, err := os.Create(filepath.Join(home, ".keeper"))
-		if err != nil {
-			fmt.Println("Error creating Config file:", err)
-			return
-		}
+		util.CheckSafeExit("Error creating Config file:", err)
 		defer jsonFile.Close()
 
 		jsonWriter := io.Writer(jsonFile)
 		encoder := json.NewEncoder(jsonWriter)
 		err = encoder.Encode(&config)
-		if err != nil {
-			fmt.Println("Error encoding Config to file:", err)
-			return
-		}
+		util.CheckSafeExit("Error encoding Config to file:", err)
 
 		fmt.Println("Config written.")
 		return

@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
+	"regexp"
 
 	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
 var insensitive bool
@@ -16,50 +18,47 @@ var listCmd = &cobra.Command{
 	Short: "List branches based on the search string",
 	Long:  `Can search over the author name or branch name. If no search string is given, then this will default to the value returned from "git config user.name"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var filter string
-		if len(args) == 0 {
-			params := []string{
-				"git",
-				"config",
-				"user.name",
+		filter := util.GetConfigOrExit("listfilter")
+		filterReg := regexp.MustCompile(filter)
+		r := util.OpenRepoOrExit()
+
+		remote, err := r.Remote("origin")
+		util.CheckSafeExit("Failed to get remote", err)
+
+		items, err := remote.List(&git.ListOptions{})
+		util.CheckSafeExit("Failed to list remote", err)
+
+		fmt.Println("Remote Branches:")
+		for _, item := range items {
+			if item.Name().IsBranch() {
+				commit, err := r.CommitObject(item.Hash())
+				util.CheckSafeExit("Failed to get commit info", err)
+
+				isAuthored := len(filterReg.FindAllStringIndex(commit.Author.Email, -1)) > 0
+				if isAuthored {
+					fmt.Println(item.Name().Short())
+				}
 			}
-			out, err := util.Output(params)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			filter = string(out)
-		} else {
-			filter = strings.Join(args, " ")
 		}
 
-		params := []string{
-			"git",
-			"for-each-ref",
-			"--format=' %(authorname) %09 %(refname:short)'",
-			"--color=always",
-			"--sort=authorname",
-			"|",
-			"grep",
-			"--color=always",
-			"'" + string(filter) + "'",
-		}
-		if insensitive {
-			params = append(params, "-i")
-		}
+		fmt.Println()
+		fmt.Println("Local Branches:")
+		refs, err := r.Branches()
+		util.CheckSafeExit("Failed to get branches", err)
 
-		util.Run(params)
+		refs.ForEach(func(ref *plumbing.Reference) error {
+			commit, err := r.CommitObject(ref.Hash())
+			util.CheckSafeExit("Failed to get commit info", err)
+
+			isAuthored := len(filterReg.FindAllStringIndex(commit.Author.Email, -1)) > 0
+			if isAuthored {
+				fmt.Println(ref.Name().Short())
+			}
+			return nil
+		})
 	},
 }
 
 func newListCmd() *cobra.Command {
-	listCmd.Flags().BoolVarP(
-		&insensitive,
-		"insensitive",
-		"i",
-		false,
-		"Help message for toggle",
-	)
-
 	return listCmd
 }
