@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -27,7 +28,7 @@ func ValidateStringSpaces(value string) bool {
 }
 
 // OpenRepoOrExit in the current working directory, or exit
-func OpenRepoOrExit() *Repository {
+func OpenRepoOrExit() *git.Repository {
 	path, err := os.Getwd()
 	CheckSafeExit("Failed to get working directory", err)
 
@@ -47,6 +48,6 @@ func CheckSafeExit(message string, err error) {
 // GetConfigOrExit from keeper config or exit program
 func GetConfigOrExit(key string) string {
 	val := viper.GetString(key)
-	CheckSafeExit(fmt.Sprintf("No %s found in ~/.keeper", key))
+	CheckSafeExit(fmt.Sprintf("No %s found in ~/.keeper", key), errors.New("Failed to get key"))
 	return val
 }

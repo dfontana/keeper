@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/fsnotify/fsnotify v1.4.7
+	github.com/gdamore/tcell v1.2.0 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/hashicorp/hcl v1.0.0
 	github.com/inconshreveable/mousetrap v1.0.0

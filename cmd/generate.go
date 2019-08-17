@@ -16,7 +16,7 @@ import (
 
 type config struct {
 	Namespace  string   `json:"namespace"`
-	ListFilter string   `json:"listfilter`
+	ListFilter string   `json:"listfilter"`
 	Template   string   `json:"template"`
 	Prompts    []string `json:"prompts"`
 }

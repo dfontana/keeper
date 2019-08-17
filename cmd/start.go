@@ -26,9 +26,9 @@ var startCmd = &cobra.Command{
 		valid := false
 		prompts := viper.GetStringSlice("prompts")
 		values := []string{}
-		for _, prompt := range prompts {
+		for _, userPrompt := range prompts {
 			for !valid {
-				value := prompt.String(fmt.Sprintf("%s:", prompt))
+				value := prompt.String(fmt.Sprintf("%s:", userPrompt))
 				if util.ValidateStringSpaces(value) {
 					valid = true
 					values = append(values, value)
