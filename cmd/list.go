@@ -4,14 +4,61 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/dfontana/keeper/prompt"
 	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
-var insensitive bool
+// LocatedRef is a plumbing ref, but noted as local or remote
+type LocatedRef struct {
+	*plumbing.Reference
+	isLocal bool
+}
+
+// IsLocal if the ref originates from the local repo or a remote
+func (ref LocatedRef) IsLocal() bool {
+	return ref.isLocal
+}
+
+func listBranches(filter string) []*LocatedRef {
+	// Build filter and open the repo
+	filterReg := regexp.MustCompile(filter)
+	r := util.OpenRepoOrExit()
+
+	branchRefs := []*LocatedRef{}
+
+	// Get the remote branches
+	remote, err := r.Remote("origin")
+	util.CheckSafeExit("Failed to get remote", err)
+	remoteRefs, err := remote.List(&git.ListOptions{})
+	util.CheckSafeExit("Failed to list remote", err)
+	for _, ref := range remoteRefs {
+		if ref.Name().IsBranch() {
+			commit, err := r.CommitObject(ref.Hash())
+			util.CheckSafeExit("Failed to get commit info", err)
+			isAuthored := len(filterReg.FindAllStringIndex(commit.Author.Email, -1)) > 0
+			if isAuthored {
+				branchRefs = append(branchRefs, &LocatedRef{ref, false})
+			}
+		}
+	}
+
+	// Get the local branches
+	localRefs, err := r.Branches()
+	util.CheckSafeExit("Failed to get branches", err)
+	localRefs.ForEach(func(ref *plumbing.Reference) error {
+		commit, err := r.CommitObject(ref.Hash())
+		util.CheckSafeExit("Failed to get commit info", err)
+		isAuthored := len(filterReg.FindAllStringIndex(commit.Author.Email, -1)) > 0
+		if isAuthored {
+			branchRefs = append(branchRefs, &LocatedRef{ref, true})
+		}
+		return nil
+	})
+
+	return branchRefs
+}
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
@@ -19,47 +66,15 @@ var listCmd = &cobra.Command{
 	Short: "List branches based on the search string",
 	Long:  `Can search over the author name or branch name. If no search string is given, then this will default to the value returned from "git config user.name"`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		prompt.Select([]prompt.Option{prompt.Option{Selected: false, Value: "meow"}})
-
 		filter := util.GetConfigOrExit("listfilter")
-		filterReg := regexp.MustCompile(filter)
-		r := util.OpenRepoOrExit()
-
-		remote, err := r.Remote("origin")
-		util.CheckSafeExit("Failed to get remote", err)
-
-		items, err := remote.List(&git.ListOptions{})
-		util.CheckSafeExit("Failed to list remote", err)
-
-		fmt.Println("Remote Branches:")
-		for _, item := range items {
-			if item.Name().IsBranch() {
-				commit, err := r.CommitObject(item.Hash())
-				util.CheckSafeExit("Failed to get commit info", err)
-
-				isAuthored := len(filterReg.FindAllStringIndex(commit.Author.Email, -1)) > 0
-				if isAuthored {
-					fmt.Println(item.Name().Short())
-				}
+		branches := listBranches(filter)
+		for _, branch := range branches {
+			location := "remote"
+			if branch.IsLocal() {
+				location = "local"
 			}
+			fmt.Println(fmt.Sprintf("%s\t%s", location, branch.Name().Short()))
 		}
-
-		fmt.Println()
-		fmt.Println("Local Branches:")
-		refs, err := r.Branches()
-		util.CheckSafeExit("Failed to get branches", err)
-
-		refs.ForEach(func(ref *plumbing.Reference) error {
-			commit, err := r.CommitObject(ref.Hash())
-			util.CheckSafeExit("Failed to get commit info", err)
-
-			isAuthored := len(filterReg.FindAllStringIndex(commit.Author.Email, -1)) > 0
-			if isAuthored {
-				fmt.Println(ref.Name().Short())
-			}
-			return nil
-		})
 	},
 }
 

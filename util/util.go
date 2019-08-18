@@ -1,7 +1,6 @@
 package util
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -48,6 +47,9 @@ func CheckSafeExit(message string, err error) {
 // GetConfigOrExit from keeper config or exit program
 func GetConfigOrExit(key string) string {
 	val := viper.GetString(key)
-	CheckSafeExit(fmt.Sprintf("No %s found in ~/.keeper", key), errors.New("Failed to get key"))
+	if val == "" {
+		fmt.Println(fmt.Sprintf("No %s found in ~/.keeper", key))
+		os.Exit(0)
+	}
 	return val
 }
