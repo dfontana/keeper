@@ -8,14 +8,15 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/dfontana/keeper/prompt"
 	"github.com/dfontana/keeper/util"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 )
 
-type config struct {
+type keeperConfig struct {
 	Namespace  string   `json:"namespace"`
-	ListFilter string   `json:"listfilter`
+	ListFilter string   `json:"listfilter"`
 	Template   string   `json:"template"`
 	Prompts    []string `json:"prompts"`
 }
@@ -26,16 +27,15 @@ var generateCmd = &cobra.Command{
 	Short: "Creates a new ~/.keeper config",
 	Long:  `Creates the ~/.keeper config file the program uses to operate. Will replace existing one if present.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var config = config{
+		var config = keeperConfig{
 			Namespace: "",
 			Template:  "",
 			Prompts:   []string{},
 		}
 
 		valid := false
-		fmt.Println("What's your K8s Namespace?")
 		for !valid {
-			config.Namespace = util.PromptString("Namespace: ")
+			config.Namespace = prompt.String("What's your K8s Namespace")
 			if util.ValidateStringSpaces(config.Namespace) {
 				valid = true
 			} else {
@@ -44,9 +44,11 @@ var generateCmd = &cobra.Command{
 		}
 
 		valid = false
-		fmt.Println("Supply the default filter for list")
 		for !valid {
-			config.ListFilter = util.PromptString("Filter: ")
+			config.ListFilter = prompt.StringHelp(
+				"Supply the default filter for list",
+				"This will filter over commiter emails",
+			)
 			if config.ListFilter != "" {
 				valid = true
 			} else {
@@ -55,9 +57,11 @@ var generateCmd = &cobra.Command{
 		}
 
 		valid = false
-		fmt.Println("Provide the template for new branches. Specify #s# where you want to prompt for input. You'll then specify these prompts afterwards.")
 		for !valid {
-			config.Template = util.PromptString("Template: ")
+			config.Template = prompt.StringHelp(
+				"Provide the template for new branches",
+				"Specify #s# where you want to prompt for input. You'll then specify these prompts afterwards.",
+			)
 			if util.ValidateStringSpaces(config.Template) {
 				valid = true
 			} else {
@@ -73,7 +77,7 @@ var generateCmd = &cobra.Command{
 			fmt.Println("Provide your prompts for each placeholder: ")
 		}
 		for !valid || numPrompts != 0 {
-			nextPrompt := util.PromptString("Prompt: ")
+			nextPrompt := prompt.String("Prompt:")
 			if nextPrompt != "" {
 				valid = true
 				numPrompts--

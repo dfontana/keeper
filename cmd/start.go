@@ -9,6 +9,7 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
+	"github.com/dfontana/keeper/prompt"
 	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
 )
@@ -25,9 +26,9 @@ var startCmd = &cobra.Command{
 		valid := false
 		prompts := viper.GetStringSlice("prompts")
 		values := []string{}
-		for _, prompt := range prompts {
+		for _, userPrompt := range prompts {
 			for !valid {
-				value := util.PromptString(fmt.Sprintf("%s:", prompt))
+				value := prompt.String(userPrompt)
 				if util.ValidateStringSpaces(value) {
 					valid = true
 					values = append(values, value)
@@ -43,7 +44,7 @@ var startCmd = &cobra.Command{
 			template = strings.Replace(template, "#s#", value, 1)
 		}
 
-		ack := util.PromptBool(fmt.Sprintf("Checkout to %s", template))
+		ack := prompt.Bool(fmt.Sprintf("Checkout to %s", template))
 		if !ack {
 			fmt.Println("Cancelled.")
 			os.Exit(0)

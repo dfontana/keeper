@@ -2,10 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
+	"github.com/dfontana/keeper/prompt"
 	"github.com/dfontana/keeper/util"
 	"github.com/spf13/cobra"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 func mapAry(vs []string, f func(string) string) []string {
@@ -18,61 +21,97 @@ func mapAry(vs []string, f func(string) string) []string {
 
 // DelCmd represents the del command
 var delCmd = &cobra.Command{
-	Use:   "del <branch_name> <branch_name> <...>",
-	Short: "Deletes a branch both locally and remotely",
-	Long:  `Given a list of branch names (without the origin/), will delete each one both locally and remotely.`,
+	Use:   "del",
+	Short: "Deletes the selected branches",
+	Long:  `After selecting branches (based on their location - local or origin), will delete them`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			cmd.Help()
-			return
+		filter := util.GetConfigOrExit("listfilter")
+		r := util.OpenRepoOrExit()
+		branches := listBranches(r, filter)
+
+		// Prompt which ones to delete
+		filteredBranches := []*LocatedRef{}
+		filteredBranchPrompts := []string{}
+		for _, branch := range branches {
+			if branch.Name().Short() == "master" {
+				// We don't mess with master
+				continue
+			}
+
+			filteredBranchPrompts = append(
+				filteredBranchPrompts,
+				fmt.Sprintf("%s\t%s", branch.LocationName(), branch.Name().Short()),
+			)
+			filteredBranches = append(filteredBranches, branch)
+		}
+		branchIdxs := prompt.SelectManyIndex("Select branches to delete", filteredBranchPrompts)
+
+		// If nothing, we're done
+		if len(branchIdxs) == 0 {
+			fmt.Println("Nothing to delete")
+			os.Exit(0)
 		}
 
-		// Commands to validate if branches exist locally and remote
-		testLocal := "git show-ref --verify --quiet refs/heads/"
-		testRemote := "git ls-remote --heads --exit-code origin "
-
-		// Commands to delete branches in local and remote
-		local := "git branch -D "
-		remote := "git push --delete origin "
-
-		// Cofirm each branch with the user, to be sure
-		// We'll only consider items that exist in either location irrespective
-		// to the other
-		localList := []string{}
-		remoteList := []string{}
-		for _, branch := range args {
-			ans := util.PromptBool(fmt.Sprintf("Delete %s", branch))
-			if ans {
-				if err := util.RunString(testLocal + branch); err == nil {
-					localList = append(localList, branch)
-				}
-				if err := util.RunString(testRemote + branch); err == nil {
-					remoteList = append(remoteList, branch)
-				}
+		// Cherry pick refs we're going to delete
+		localRefs := []*LocatedRef{}
+		remoteRefs := []*LocatedRef{}
+		for _, idx := range branchIdxs {
+			ref := filteredBranches[idx]
+			if ref.IsLocal() {
+				localRefs = append(localRefs, ref)
 			} else {
-				fmt.Printf("Skipping %s\n", branch)
-			}
-		}
-		fmt.Println("Deleting:")
-		fmt.Println(strings.Join(mapAry(localList, func(v string) string {
-			return "\t[Local]: " + v
-		}), " "))
-		fmt.Println(strings.Join(mapAry(remoteList, func(v string) string {
-			return "\t[Remote]: " + v
-		}), " "))
-
-		if len(localList) > 0 {
-			if err := util.RunString(local + strings.Join(localList, " ")); err != nil {
-				return
+				remoteRefs = append(remoteRefs, ref)
 			}
 		}
 
-		if len(remoteList) > 0 {
-			if err := util.RunString(remote + strings.Join(remoteList, " ")); err != nil {
-				return
-			}
+		// Warn user & confirm
+		fmt.Println("About to delete:")
+		for _, ref := range remoteRefs {
+			fmt.Println(fmt.Sprintf("   %s\t%s", ref.LocationName(), ref.Name().Short()))
 		}
+		for _, ref := range localRefs {
+			fmt.Println(fmt.Sprintf("   %s\t%s", ref.LocationName(), ref.Name().Short()))
+		}
+		result := prompt.Bool("Are you sure")
+		if !result {
+			fmt.Println("Cancelled.")
+			os.Exit(0)
+		}
+
+		// Go forth.
+		deleteRemote(r, remoteRefs)
+		deleteLocal(r, localRefs)
 	},
+}
+
+func deleteRemote(r *git.Repository, refs []*LocatedRef) {
+	// TODO figure out how to get SSH auth working under git.Push
+	// updates := []config.RefSpec{}
+	// for _, ref := range refs {
+	// 	updates = append(updates, config.RefSpec(":refs/heads/"+ref.Name().Short()))
+	// }
+	// auth, err := ssh.NewSSHAgentAuth("")
+	// util.CheckSafeExit("Failed to get ssh auth", err)
+	// err = r.Push(&git.PushOptions{
+	// 	Auth:     auth,
+	// 	RefSpecs: updates,
+	// 	Progress: os.Stdout,
+	// })
+	// util.CheckSafeExit("Failed to clear remotes, stopping", err)
+	names := []string{}
+	for _, ref := range refs {
+		names = append(names, ref.Name().Short())
+	}
+	cmd := fmt.Sprintf("git push --delete origin %s", strings.Join(names, " "))
+	err := util.RunString(cmd)
+	util.CheckSafeExit("Can't complete remote", err)
+}
+
+func deleteLocal(r *git.Repository, refs []*LocatedRef) {
+	for _, ref := range refs {
+		err := r.Storer.RemoveReference(ref.Name())
+		util.CheckSafeExit("Failed to clear local branch, stopping", err)
+	}
 }
 
 func newDelCmd() *cobra.Command {
