@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type config struct {
+type keeperConfig struct {
 	Namespace  string   `json:"namespace"`
 	ListFilter string   `json:"listfilter"`
 	Template   string   `json:"template"`
@@ -27,7 +27,7 @@ var generateCmd = &cobra.Command{
 	Short: "Creates a new ~/.keeper config",
 	Long:  `Creates the ~/.keeper config file the program uses to operate. Will replace existing one if present.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var config = config{
+		var config = keeperConfig{
 			Namespace: "",
 			Template:  "",
 			Prompts:   []string{},

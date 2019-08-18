@@ -29,11 +29,8 @@ func (ref LocatedRef) LocationName() string {
 	return "remote"
 }
 
-func listBranches(filter string) []*LocatedRef {
-	// Build filter and open the repo
+func listBranches(r *git.Repository, filter string) []*LocatedRef {
 	filterReg := regexp.MustCompile(filter)
-	r := util.OpenRepoOrExit()
-
 	branchRefs := []*LocatedRef{}
 
 	// Get the remote branches
@@ -75,7 +72,8 @@ var listCmd = &cobra.Command{
 	Long:  `Can search over the author name or branch name. If no search string is given, then this will default to the value returned from "git config user.name"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		filter := util.GetConfigOrExit("listfilter")
-		branches := listBranches(filter)
+		r := util.OpenRepoOrExit()
+		branches := listBranches(r, filter)
 		for _, branch := range branches {
 			fmt.Println(fmt.Sprintf("%s\t%s", branch.LocationName(), branch.Name().Short()))
 		}
