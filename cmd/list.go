@@ -21,6 +21,14 @@ func (ref LocatedRef) IsLocal() bool {
 	return ref.isLocal
 }
 
+// LocationName returns the short string of local or remote, depending on IsLocal
+func (ref LocatedRef) LocationName() string {
+	if ref.IsLocal() {
+		return "local"
+	}
+	return "remote"
+}
+
 func listBranches(filter string) []*LocatedRef {
 	// Build filter and open the repo
 	filterReg := regexp.MustCompile(filter)
@@ -69,11 +77,7 @@ var listCmd = &cobra.Command{
 		filter := util.GetConfigOrExit("listfilter")
 		branches := listBranches(filter)
 		for _, branch := range branches {
-			location := "remote"
-			if branch.IsLocal() {
-				location = "local"
-			}
-			fmt.Println(fmt.Sprintf("%s\t%s", location, branch.Name().Short()))
+			fmt.Println(fmt.Sprintf("%s\t%s", branch.LocationName(), branch.Name().Short()))
 		}
 	},
 }

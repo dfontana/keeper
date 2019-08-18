@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/dfontana/keeper/prompt"
@@ -19,49 +20,67 @@ func mapAry(vs []string, f func(string) string) []string {
 
 // DelCmd represents the del command
 var delCmd = &cobra.Command{
-	Use:   "del <branch_name> <branch_name> <...>",
-	Short: "Deletes a branch both locally and remotely",
-	Long:  `Given a list of branch names (without the origin/), will delete each one both locally and remotely.`,
+	Use:   "del",
+	Short: "Deletes the selected branches",
+	Long:  `After selecting branches (based on their location - local or origin), will delete them`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			cmd.Help()
-			return
-		}
-
-		// Commands to validate if branches exist locally and remote
-		testLocal := "git show-ref --verify --quiet refs/heads/"
-		testRemote := "git ls-remote --heads --exit-code origin "
+		filter := util.GetConfigOrExit("listfilter")
+		branches := listBranches(filter)
 
 		// Commands to delete branches in local and remote
 		local := "git branch -D "
 		remote := "git push --delete origin "
 
-		// Cofirm each branch with the user, to be sure
-		// We'll only consider items that exist in either location irrespective
-		// to the other
+		// Prompt which ones to delete
+		filteredBranches := []*LocatedRef{}
+		filteredBranchPrompts := []string{}
+		for _, branch := range branches {
+			if branch.Name().Short() == "master" {
+				// We don't mess with master
+				continue
+			}
+
+			filteredBranchPrompts = append(
+				filteredBranchPrompts,
+				fmt.Sprintf("%s\t%s", branch.LocationName(), branch.Name().Short()),
+			)
+			filteredBranches = append(filteredBranches, branch)
+		}
+		branchIdxs := prompt.SelectManyIndex("Select branches to delete", filteredBranchPrompts)
+
+		// If nothing, we're done
+		if len(branchIdxs) == 0 {
+			fmt.Println("Nothing to delete")
+			os.Exit(0)
+		}
+
+		// Cherry pick refs we're going to delete
 		localList := []string{}
 		remoteList := []string{}
-		for _, branch := range args {
-			ans := prompt.Bool(fmt.Sprintf("Delete %s", branch))
-			if ans {
-				if err := util.RunString(testLocal + branch); err == nil {
-					localList = append(localList, branch)
-				}
-				if err := util.RunString(testRemote + branch); err == nil {
-					remoteList = append(remoteList, branch)
-				}
+		selectedRefs := []*LocatedRef{}
+		for _, idx := range branchIdxs {
+			ref := filteredBranches[idx]
+			refName := ref.Name().Short()
+			if ref.IsLocal() {
+				localList = append(localList, refName)
 			} else {
-				fmt.Printf("Skipping %s\n", branch)
+				remoteList = append(remoteList, refName)
 			}
+			selectedRefs = append(selectedRefs, ref)
 		}
-		fmt.Println("Deleting:")
-		fmt.Println(strings.Join(mapAry(localList, func(v string) string {
-			return "\t[Local]: " + v
-		}), " "))
-		fmt.Println(strings.Join(mapAry(remoteList, func(v string) string {
-			return "\t[Remote]: " + v
-		}), " "))
 
+		// Warn user & confirm
+		fmt.Println("About to delete:")
+		for _, ref := range selectedRefs {
+			fmt.Println(fmt.Sprintf("   %s\t%s", ref.LocationName(), ref.Name().Short()))
+		}
+		result := prompt.Bool("Are you sure")
+		if !result {
+			fmt.Println("Cancelled.")
+			os.Exit(0)
+		}
+
+		// Go forth.
 		if len(localList) > 0 {
 			if err := util.RunString(local + strings.Join(localList, " ")); err != nil {
 				return

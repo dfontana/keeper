@@ -63,6 +63,17 @@ func SelectMany(prompt string, options []string) []string {
 	return SelectManyHelp(prompt, "", options)
 }
 
+// SelectManyIndex returns the indicies of selected options from a list
+func SelectManyIndex(prompt string, options []string) (val []int) {
+	val = []int{}
+	question := &survey.MultiSelect{
+		Message: prompt,
+		Options: options,
+	}
+	survey.AskOne(question, &val)
+	return
+}
+
 // SelectManyHelp select many, but with a help prompt
 func SelectManyHelp(prompt string, help string, options []string) (val []string) {
 	val = []string{}
